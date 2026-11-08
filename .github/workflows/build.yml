@@ -27,12 +27,12 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
         with:
           go-version-file: host/go/go.mod
           cache-dependency-path: host/go/go.sum
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.15'
           cache: pip
@@ -53,7 +53,7 @@ jobs:
           EXECUTABLE: ${{ matrix.executable }}
         run: |
           python .github/package.py go
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: release-${{ matrix.platform }}
           path: build/release/*.zip
@@ -61,7 +61,7 @@ jobs:
       - name: Package Python source
         if: runner.os == 'Linux'
         run: python .github/package.py python
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         if: runner.os == 'Linux'
         with:
           name: release-python
@@ -72,8 +72,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: '22'
           cache: npm
@@ -82,7 +82,7 @@ jobs:
         run: make web-build
       - name: Package website
         run: python3 .github/package.py web
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: release-web
           path: build/release/esp-con2-web.zip
@@ -92,9 +92,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       # The pinned ESP-IDF SDK needs a separate Python from the host runtime.
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.12'
       - name: Install SDK prerequisites
@@ -103,14 +103,14 @@ jobs:
         env:
           ESP_CON2_IDF_PYTHON: python3.12
         run: bash firmware/scripts/dependencies.sh
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.15'
       - name: Build unified ESP32-S3 firmware
         run: make firmware
       - name: Package firmware
         run: python .github/package.py firmware
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: release-firmware
           path: build/release/esp-con2-firmware.zip
@@ -123,7 +123,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8.0.2
         with:
           pattern: release-*
           merge-multiple: true
