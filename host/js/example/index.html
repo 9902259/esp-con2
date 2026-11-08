@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>esp-con2 · Switch 2 controller</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header><span class="eyebrow">ESP-CON2 / LOCAL USB CONTROL</span><h1>ESP32-S3 board controller</h1>
+      <p>Joy-Con 2 L+R or Pro Controller 2. One USB connection, direct from your browser.</p></header>
+    <section class="connection"><div><span class="label">CONNECTION</span><strong id="status" role="status">Disconnected</strong><p id="detail">Connect your ESP32-S3 board with a USB data cable.</p></div>
+      <div class="actions"><button id="connect" class="primary">Connect ESP32-S3 board</button><button id="disconnect" disabled>Disconnect</button></div></section>
+    <p id="notice" role="alert">Close the MCP server, CLI, and serial monitors before connecting. Only one can own the USB port.</p>
+    <div class="layout">
+      <section><h2>Buttons</h2><p>Each click is a bounded press, followed by release.</p>
+        <label>Press duration <select id="duration"><option value="100">0.1 seconds</option><option value="500">0.5 seconds</option><option value="1000">1 second</option><option value="2000">2 seconds</option></select></label>
+        <div id="buttons" class="buttons"></div>
+        <button id="pair-grip" data-input>Press L+R · 2 seconds</button>
+        <button id="stop" class="danger" disabled>Release all / Escape</button>
+        <p class="small">In Joy-Con mode, SL and SR reach both halves together. HOME, Capture, and C can open system UI.</p>
+      </section>
+      <section><h2>Control sticks</h2><p>Set a position, then send it for the selected duration.</p>
+        <div id="axes"></div><div class="actions"><button id="sticks" data-input>Send stick positions</button><button id="center">Center sliders</button></div>
+        <p class="small">Axis direction and calibration need console-side verification.</p>
+        <h2>Controller mode</h2><div class="actions"><button id="joycon" data-device>Joy-Con L+R</button><button id="pro" data-device>Pro Controller 2</button></div>
+        <p class="small">Unified firmware required. Switching reboots; reconnect afterward. Bonds are preserved.</p>
+        <h2>Pairing</h2><div class="actions"><button id="wake" data-device>Wake / reconnect</button><button id="pair" data-device>Reset active pairing</button></div>
+        <p class="small">Open Controllers → Change Grip/Order on Switch 2. Wait for readiness, then select with L+R.</p>
+      </section>
+    </div>
+    <details><summary>Device log</summary><pre id="log" aria-label="Device log"></pre></details>
+    <footer>Local control only · No screen capture or game feedback · No external scripts or uploads</footer>
+  </main>
+  <!-- All assets are local; serial access is scoped to the browser-selected device. -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

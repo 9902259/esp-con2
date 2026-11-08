@@ -1,0 +1,23 @@
+# Keep downloaded tools and generated builds out of source control.
+.deps/
+.venv/
+__pycache__/
+firmware/build/
+firmware/build-*/
+firmware/sdkconfig-*
+firmware/sdkconfig
+firmware/sdkconfig.old
+bin/
+.playwright-cli/
+# Generated output and local recovery images are never project source.
+build/
+backups/
+
+# JavaScript dependencies are restored from the lockfile.
+node_modules/
+
+# Optional plain go build output.
+/host/go/esp-con2
+
+# macOS file metadata is not project source.
+.DS_Store
