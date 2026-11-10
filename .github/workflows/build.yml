@@ -142,5 +142,6 @@ jobs:
           fi
           gh release upload "$RELEASE_TAG" ./*.zip SHA256SUMS --clobber
           prerelease=false
-          if [[ "$RELEASE_TAG" == *-* ]]; then prerelease=true; fi
+          # v0.0.1 is the initial beta despite its plain version tag.
+          if [[ "$RELEASE_TAG" == *-* || "$RELEASE_TAG" == v0.0.1 ]]; then prerelease=true; fi
           gh release edit "$RELEASE_TAG" --draft=false --prerelease="$prerelease"
