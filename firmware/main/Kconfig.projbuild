@@ -1,0 +1,33 @@
+menu "esp-con2 board compatibility"
+    choice ESP_CON2_SERIAL
+        prompt "Command serial transport"
+        default ESP_CON2_SERIAL_BOTH
+        help
+            Both accepts commands on native USB Serial/JTAG and UART, with
+            independent line buffers and replies to the originating port.
+            Select USB only if the board uses the UART pins for peripherals.
+        config ESP_CON2_SERIAL_BOTH
+            bool "Native USB and UART"
+            select USJ_ENABLE_USB_SERIAL_JTAG
+        config ESP_CON2_SERIAL_USB
+            bool "Native USB only"
+            select USJ_ENABLE_USB_SERIAL_JTAG
+        config ESP_CON2_SERIAL_UART
+            bool "UART only"
+    endchoice
+
+    config ESP_CON2_UART_TX_PIN
+        int "UART0 TX GPIO (board to host)"
+        depends on !ESP_CON2_SERIAL_USB
+        range 0 48
+        default 43
+        help
+            Check the board schematic before changing pins. Do not use pins
+            connected to flash, PSRAM, native USB, or other board peripherals.
+
+    config ESP_CON2_UART_RX_PIN
+        int "UART0 RX GPIO (host to board)"
+        depends on !ESP_CON2_SERIAL_USB
+        range 0 48
+        default 44
+endmenu

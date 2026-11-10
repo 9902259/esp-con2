@@ -5,6 +5,44 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 from bridge import Bridge
+from control import request
+
+
+class StartupTests(unittest.TestCase):
+    def test_lost_startup_status_is_retried(self):
+        now, writes, replies = [0.0], [], []
+
+        class Port:
+            # Simulate a bridge discarding bytes until the application has booted.
+            def write(self, data):
+                writes.append(data)
+                if len(writes) > 1:
+                    replies.append(b'@STATUS device=esp-con2 protocol=1 streaming=0\n')
+
+            def readline(self):
+                now[0] += .1
+                return replies.pop(0) if replies else b''
+
+        with patch('control.time.monotonic', side_effect=lambda: now[0]):
+            self.assertIn('device=esp-con2', request(Port(), 'STATUS'))
+        self.assertEqual(writes, [b'STATUS\n', b'STATUS\n'])
+
+    def test_mutating_command_is_never_retried(self):
+        now, writes = [0.0], []
+
+        class Port:
+            # A missing acknowledgement must not execute a mode change twice.
+            def write(self, data):
+                writes.append(data)
+
+            def readline(self):
+                now[0] += .1
+                return b''
+
+        with patch('control.time.monotonic', side_effect=lambda: now[0]):
+            with self.assertRaises(RuntimeError):
+                request(Port(), 'MODE pro')
+        self.assertEqual(writes, [b'MODE pro\n'])
 
 
 class BridgeTests(unittest.TestCase):

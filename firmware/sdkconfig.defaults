@@ -5,9 +5,10 @@
 # their stock NimBLE controller rejects 5 ms (see the component README).
 CONFIG_IDF_TARGET="esp32s3"
 
-# On the ESP32-S3 (native USB), route the console to USB-Serial-JTAG so the
-# monitor shows the pairing trace. Harmless on boards with a UART bridge too.
+# Keep SDK logs on native USB; UART0 carries only the host command protocol.
 CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+CONFIG_ESP_CON2_SERIAL_BOTH=y
 
 # Common ESP-related
 CONFIG_ESP_SYSTEM_EVENT_TASK_STACK_SIZE=4096
@@ -16,7 +17,13 @@ CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
 # sdkconfig.defaults.esp32c6 = 160 MHz, the C6 maximum). The input stream is
 # paced by an esp_timer (HighResolutionTimer), not the FreeRTOS tick, so no
 # CONFIG_FREERTOS_HZ override is needed.
-CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+# Fit the same image on 2 MB and larger boards; leave extra capacity unused.
+CONFIG_ESPTOOLPY_FLASHSIZE_2MB=y
+CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
+CONFIG_ESPTOOLPY_FLASHFREQ_40M=y
+CONFIG_ESPTOOLPY_FLASH_MODE_AUTO_DETECT=y
+# Do not depend on a board-specific PSRAM type, size, or wiring.
+CONFIG_SPIRAM=n
 
 # Partition Table
 CONFIG_PARTITION_TABLE_CUSTOM=y
@@ -76,5 +83,5 @@ CONFIG_BT_NIMBLE_MAX_CCCDS=128
 # CONFIG_BT_CTRL_BLE_MIN_CONN_INTERVAL_ENABLE; the C6-family NimBLE controller has
 # no such option yet.
 
-# Require Switch 2 connection timing on the ESP32-S3 board ESP32-S3.
+# Require Switch 2 connection timing on ESP32-S3.
 CONFIG_BT_CTRL_BLE_MIN_CONN_INTERVAL_ENABLE=y

@@ -18,5 +18,6 @@ git -C .deps/esp-idf checkout f0114250e205e33a945e2f3e7ec40085c5a029a2
 git -C .deps/esp-idf submodule update --init --depth 1 --recursive
 export IDF_TOOLS_PATH="$PWD/.deps/idf-tools"
 # BLE-only firmware needs Xtensa, not the large RISC-V ULP or debugger toolchains.
-"${ESP_CON2_IDF_PYTHON:-python3.12}" .deps/esp-idf/tools/idf_tools.py install xtensa-esp-elf
-"${ESP_CON2_IDF_PYTHON:-python3.12}" .deps/esp-idf/tools/idf_tools.py install-python-env
+# Use the same current stable Python as the host tooling.
+"${ESP_CON2_IDF_PYTHON:-python3.15}" .deps/esp-idf/tools/idf_tools.py install xtensa-esp-elf
+"${ESP_CON2_IDF_PYTHON:-python3.15}" .deps/esp-idf/tools/idf_tools.py install-python-env

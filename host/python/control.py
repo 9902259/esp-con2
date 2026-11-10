@@ -32,8 +32,13 @@ def axis(text):
 
 def request(port, command):
     port.write((command + "\n").encode("ascii"))
-    deadline = time.monotonic() + 2
+    # UART bridges can reset the board on open and lose the first boot-time probe.
+    retry_at = time.monotonic() + .5
+    deadline = time.monotonic() + (4 if command == 'STATUS' else 2)
     while time.monotonic() < deadline:
+        if command == 'STATUS' and time.monotonic() >= retry_at:
+            port.write(b'STATUS\n')
+            retry_at = time.monotonic() + .5
         line = port.readline().decode("utf-8", errors="replace").strip()
         if line.startswith("@ERR"):
             raise RuntimeError(line)
@@ -83,11 +88,13 @@ def main():
         port.open()
         time.sleep(0.15)
         port.reset_input_buffer()
+        # Establish readiness before sending a command that must execute just once.
+        status = request(port, 'STATUS')
         if args.command == "mode":
             print(request(port, 'MODE ' + args.profile))
             return
         if args.command in ("status", "pair", "wake", "release"):
-            print(request(port, args.command.upper()))
+            print(status if args.command == 'status' else request(port, args.command.upper()))
             return
         mask = getattr(args, "buttons", 0)
         axes = [0.0] * 4

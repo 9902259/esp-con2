@@ -55,6 +55,50 @@ func bridgeFor(f *fakePort) *Bridge {
 
 const connected = "@STATUS device=esp-con2 protocol=1 paired=1 connected=1 streaming=1"
 
+// A resetting UART bridge drops the first probe without reporting an I/O error.
+type bootingPort struct{ *fakePort }
+
+func (f *bootingPort) Write(p []byte) (int, error) {
+	if len(f.writes) == 0 {
+		f.writes = append(f.writes, strings.TrimSpace(string(p)))
+		return len(p), nil
+	}
+	return f.fakePort.Write(p)
+}
+
+func (f *bootingPort) Read(p []byte) (int, error) {
+	if len(f.response) == 0 {
+		time.Sleep(5 * time.Millisecond)
+		return 0, nil
+	}
+	return f.fakePort.Read(p)
+}
+
+func TestUARTStartupRetriesOnlyStatus(t *testing.T) {
+	f := &bootingPort{&fakePort{status: connected}}
+	b := &Bridge{Port: "fake", open: func(string) (wire, error) { return f, nil }}
+	defer b.Close()
+	if _, err := b.Command(context.Background(), "RELEASE"); err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Join(f.writes, ","); got != "STATUS,STATUS,RELEASE" {
+		t.Fatalf("unexpected startup commands: %s", got)
+	}
+}
+
+func TestUARTStartupHonorsCancellation(t *testing.T) {
+	f := &bootingPort{&fakePort{status: connected}}
+	b := &Bridge{Port: "fake", open: func(string) (wire, error) { return f, nil }}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	defer cancel()
+	if _, err := b.Command(ctx, "RELEASE"); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("expected cancellation, got %v", err)
+	}
+	if !f.closed || len(f.writes) != 1 || f.writes[0] != "STATUS" {
+		t.Fatalf("sent input while booting: %v", f.writes)
+	}
+}
+
 func TestInputAlwaysReleases(t *testing.T) {
 	for _, mode := range []string{"success", "cancel", "disconnect"} {
 		t.Run(mode, func(t *testing.T) {

@@ -2,7 +2,12 @@
 
 Control Nintendo Switch 2 from a computer using an ESP32-S3 board:
 
-**Computer → USB serial → ESP32-S3 board → Bluetooth LE → Switch 2**
+**Computer → native USB or USB-to-UART bridge → ESP32-S3 → Bluetooth LE → Switch 2**
+
+The default firmware uses no PSRAM and fits boards with 2 MB or more flash.
+See [board requirements](firmware/README.md#board-requirements) for pins and exceptions.
+For Seeed reTerminal Sticky, use `ESP_CON2_BOARD=sticky make firmware` to keep
+native USB disabled on its microphone pins.
 
 One firmware supports Pro Controller 2 or paired left/right Joy-Con 2 emulation.
 Only one mode runs at a time. Mode changes reboot the ESP32-S3 board and preserve

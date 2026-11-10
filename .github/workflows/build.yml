@@ -80,6 +80,8 @@ jobs:
           cache-dependency-path: host/js/example/package-lock.json
       - name: Build TypeScript example and API
         run: make web-build
+      - name: Test serial startup handshake
+        run: node --test host/js/api.test.mjs
       - name: Package website
         run: python3 .github/package.py web
       - uses: actions/upload-artifact@v7.0.2
@@ -93,27 +95,31 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7.0.1
-      # The pinned ESP-IDF SDK needs a separate Python from the host runtime.
+      # Use current stable Python for both firmware and host tooling.
       - uses: actions/setup-python@v7.1.0
         with:
-          python-version: '3.12'
+          python-version: '3.15'
       - name: Install SDK prerequisites
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build libusb-1.0-0
       - name: Install pinned firmware dependencies
         env:
-          ESP_CON2_IDF_PYTHON: python3.12
+          ESP_CON2_IDF_PYTHON: python3.15
         run: bash firmware/scripts/dependencies.sh
-      - uses: actions/setup-python@v7.1.0
-        with:
-          python-version: '3.15'
       - name: Build unified ESP32-S3 firmware
         run: make firmware
       - name: Package firmware
         run: python .github/package.py firmware
+      # Sticky uses GPIO19/20 for its microphone, so ship a UART-only image too.
+      - name: Build and package reTerminal Sticky firmware
+        env:
+          ESP_CON2_BOARD: sticky
+        run: |
+          make firmware
+          python .github/package.py firmware
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: release-firmware
-          path: build/release/esp-con2-firmware.zip
+          path: build/release/esp-con2-firmware*.zip
           if-no-files-found: error
 
   release:

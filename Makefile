@@ -3,7 +3,7 @@ export GOCACHE := $(CURDIR)/build/cache/go
 export GOMODCACHE := $(CURDIR)/.deps/go-mod
 export GOPATH := $(CURDIR)/.deps/go
 
-.PHONY: build python go web-build test firmware web clean
+.PHONY: build python go web-build test firmware virtual-test web clean
 build: python go web-build
 python:
 	bash host/python/build.sh
@@ -15,9 +15,14 @@ web-build:
 test:
 	cd host/go && go test -race ./... && go vet ./...
 	build/venv/python/bin/python -m unittest discover -s host/python -p 'test_*.py'
+	node --test host/js/api.test.mjs
 firmware:
 	python3.15 firmware/scripts/prepare_unified.py
-	ESP_CON2_PROFILE=unified bash firmware/scripts/firmware.sh -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.dual' build
+	ESP_CON2_PROFILE=unified bash firmware/scripts/firmware.sh build
+# Virtual diagnostics reuse the production UART transport without emulating BLE.
+virtual-test:
+	ESP_CON2_BOARD=sticky $(MAKE) firmware
+	python3.15 firmware/scripts/test_virtual.py
 # Serve the compiled example, including its sibling reusable API module.
 web: web-build
 	python3.15 -m http.server 8765 --bind 127.0.0.1 --directory build/js

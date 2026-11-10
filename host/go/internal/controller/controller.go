@@ -97,12 +97,28 @@ func request(ctx context.Context, port wire, command string) (string, error) {
 	if n != len(command)+1 {
 		return "", io.ErrShortWrite
 	}
-	deadline := time.Now().Add(1500 * time.Millisecond)
+	// Only read-only STATUS probes may repeat while a UART bridge resets the board.
+	timeout := 1500 * time.Millisecond
+	if command == "STATUS" {
+		timeout = 4 * time.Second
+	}
+	deadline := time.Now().Add(timeout)
+	retryAt := time.Now().Add(500 * time.Millisecond)
 	var line strings.Builder
 	one := make([]byte, 1)
 	for time.Now().Before(deadline) {
 		if err := ctx.Err(); err != nil {
 			return "", err
+		}
+		if command == "STATUS" && time.Now().After(retryAt) {
+			n, err := port.Write([]byte("STATUS\n"))
+			if err != nil {
+				return "", err
+			}
+			if n != len("STATUS\n") {
+				return "", io.ErrShortWrite
+			}
+			retryAt = time.Now().Add(500 * time.Millisecond)
 		}
 		n, err := port.Read(one)
 		if err != nil {

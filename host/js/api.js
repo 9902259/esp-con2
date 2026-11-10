@@ -36,7 +36,7 @@ export class ControllerSerial {
           if (pending && (line.startsWith('@ERR') || (pending.status
             ? /^@STATUS device=esp-con2 protocol=1 /.test(line)
             : line === '@OK'))) {
-            this.pending = null; clearTimeout(pending.timer);
+            this.pending = null; clearTimeout(pending.timer); clearInterval(pending.retryTimer);
             if (line.startsWith('@ERR')) pending.reject(new Error(line)); else pending.resolve(line);
           }
         }
@@ -54,14 +54,23 @@ export class ControllerSerial {
     const run = this.tail.catch(() => {}).then(() => new Promise((resolve, reject) => {
       if (!this.writer || this.closing || this.session !== session) { reject(new Error('Connect the ESP32-S3 board first.')); return; }
       const timer = setTimeout(() => {
+        clearInterval(this.pending?.retryTimer);
         this.pending = null; reject(new Error('Device response timed out. Reconnect and check the selected port.'));
         // Closing prevents a late reply from being mistaken for the next request.
         void this.close();
       }, 3000);
-      this.pending = {resolve, reject, timer, status: text === 'STATUS'};
-      this.writer.write(new TextEncoder().encode(text + '\n')).catch(error => {
-        clearTimeout(timer); this.pending = null; reject(error); void this.close();
-      });
+      const pending = {resolve, reject, timer, status: text === 'STATUS'};
+      const send = () => {
+        if (this.pending !== pending) return;
+        this.writer.write(new TextEncoder().encode(text + '\n')).catch(error => {
+          clearTimeout(timer); clearInterval(pending.retryTimer);
+          this.pending = null; reject(error); void this.close();
+        });
+      };
+      // Re-probe readiness if opening a UART bridge rebooted the board; inputs never repeat here.
+      if (pending.status) pending.retryTimer = setInterval(send, 500);
+      this.pending = pending;
+      send();
     }));
     this.tail = run; return run;
   }
@@ -92,7 +101,8 @@ export class ControllerSerial {
     this.closing = true; ++this.generation; ++this.session;
     this.closeTask = (async () => {
       if (this.pending) {
-        clearTimeout(this.pending.timer); this.pending.reject(this.readError || new Error('Serial connection closed.')); this.pending = null;
+        clearTimeout(this.pending.timer); clearInterval(this.pending.retryTimer);
+        this.pending.reject(this.readError || new Error('Serial connection closed.')); this.pending = null;
       }
       try {
         await this.reader?.cancel(); await this.readTask;

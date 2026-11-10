@@ -1,0 +1,2 @@
+# Reuse production transport selection and pin validation.
+rsource "../../../main/Kconfig.projbuild"
