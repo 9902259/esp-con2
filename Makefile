@@ -1,5 +1,5 @@
 # All generated files remain outside the source directories.
-.PHONY: build python web-build test firmware virtual-test web clean
+.PHONY: build python web-build test web-bench firmware virtual-test web clean
 build: python web-build
 python:
 	bash host/python/build.sh
@@ -8,7 +8,10 @@ web-build:
 
 test:
 	build/venv/python/bin/python -m unittest discover -s host/python/tests -t host/python -p 'test_*.py'
-	node --test host/javascript/tests/api.test.mjs
+	node --test 'host/javascript/tests/*.test.mjs'
+# In-memory serial benchmark for the JavaScript API; pass BENCH_API=path/to/api.js to compare.
+web-bench:
+	node host/javascript/tests/bench.mjs $(BENCH_API)
 firmware:
 	python3.15 firmware/scripts/prepare_unified.py
 	bash firmware/scripts/idf.sh build

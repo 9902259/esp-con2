@@ -14,9 +14,10 @@ across calls. The adapter passed to `connect(port)` must expose `open(options)`,
 `setSignals(signals)`, `close()`, and WHATWG readable and writable byte streams.
 The repository ships the API without a Node serial adapter.
 
-- **Node.js:** Call `await controller.connect(port)`, then read the startup status
-  from the line callback or use `await controller.command('STATUS')`. Send bounded
-  input with `await controller.input(['a'], [0, 0, 0, 0], 100)` for a 100 ms A press.
+- **Node.js:** Create `new EspCon2({onLine, onClose})`, call `await controller.connect(port)`
+  (it resolves with the startup STATUS line), and check readiness with
+  `(await controller.status()).streaming`. Send bounded input with
+  `await controller.input(['a'], [0, 0, 0, 0], 100)` for a 100 ms A press.
   Use `stop()` to interrupt a hold, then `close()` when handing off the port.
 - **Browser:** If direct Node serial access is unavailable, use the
   [Web Serial page](../../../docs/web-serial.md) in desktop Chromium. Run `make web`,

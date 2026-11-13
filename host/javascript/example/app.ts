@@ -1,6 +1,7 @@
-import {ControllerSerial, buttons} from '../api.js';
+import {BUTTONS, EspCon2, parseStatus} from '../api.js';
+import type {SerialPortLike} from '../api.js';
 // Web Serial is an optional browser API, absent from TypeScript's standard DOM types.
-const serialAccess = (navigator as Navigator & {serial: {requestPort(): Promise<unknown>}}).serial;
+const serialAccess = (navigator as Navigator & {serial: {requestPort(): Promise<SerialPortLike>}}).serial;
 // All example DOM lookups are checked once at their point of use.
 const $ = (id: string): HTMLElement => {
   const node = document.getElementById(id);
@@ -20,19 +21,24 @@ function render() {
   document.querySelectorAll<HTMLButtonElement>('[data-input]').forEach(button => button.disabled = !ready || busy);
   document.querySelectorAll<HTMLButtonElement>('[data-device]').forEach(button => button.disabled = !connected || busy);
 }
-const client = new ControllerSerial(line => {
-  // Keep diagnostics local and bounded even during long sessions.
-  $('log').textContent = ($('log').textContent + line + '\n').split('\n').slice(-160).join('\n');
-  if (!/^@STATUS device=esp-con2 protocol=1 /.test(line)) return;
-  const streaming = /\bstreaming=1\b/.test(line);
-  if (!streaming) { readyAt = 0; ready = false; }
-  else { if (!readyAt) readyAt = Date.now() + 2000; ready = Date.now() >= readyAt; }
-  $('status').textContent = ready ? 'Ready for input' : streaming ? 'Finishing initialization…' : 'Waiting for Switch 2';
-  $('detail').textContent = line.match(/name=(.*?)(?: left_tx=|$)/)?.[1] || 'ESP32-S3 board connected';
-  render();
-}, () => {
-  connected = ready = false; readyAt = 0; clearInterval(poll);
-  $('status').textContent = 'Disconnected'; render();
+// Keep diagnostics local and bounded even during long sessions.
+const logLines: string[] = [];
+const client = new EspCon2({
+  onLine(line) {
+    if (logLines.push(line) > 160) logLines.shift();
+    $('log').textContent = logLines.join('\n') + '\n';
+    const status = parseStatus(line);
+    if (!status) return;
+    if (!status.streaming) { readyAt = 0; ready = false; }
+    else { if (!readyAt) readyAt = Date.now() + 2000; ready = Date.now() >= readyAt; }
+    $('status').textContent = ready ? 'Ready for input' : status.streaming ? 'Finishing initialization…' : 'Waiting for Switch 2';
+    $('detail').textContent = status.name || 'ESP32-S3 board connected';
+    render();
+  },
+  onClose() {
+    connected = ready = false; readyAt = 0; clearInterval(poll);
+    $('status').textContent = 'Disconnected'; render();
+  },
 });
 async function act(fn: () => Promise<unknown>) {
   if (busy) return;
@@ -41,7 +47,7 @@ async function act(fn: () => Promise<unknown>) {
   catch (error) { $('notice').textContent = (error instanceof Error ? error.message : String(error)); }
   finally { busy = false; render(); }
 }
-for (const name of buttons) {
+for (const name of BUTTONS) {
   const button = document.createElement('button'); button.textContent = labels[name] || name.toUpperCase();
   button.dataset.input = ''; button.addEventListener('click', () => act(() => client.input([name], [0,0,0,0], Number(field('duration').value))));
   $('buttons').append(button);
@@ -58,7 +64,7 @@ $('connect').addEventListener('click', () => act(async () => {
   const port = await serialAccess.requestPort();
   await client.connect(port); connected = true; render();
   poll = setInterval(() => {
-    if (!busy && !client.pending) client.command('STATUS').catch(error => $('notice').textContent = (error instanceof Error ? error.message : String(error)));
+    if (!busy && !client.busy) client.command('STATUS').catch(error => $('notice').textContent = (error instanceof Error ? error.message : String(error)));
   }, 1000);
   $('notice').textContent = 'Connected locally. Open Change Grip/Order on Switch 2 if needed.';
 }));

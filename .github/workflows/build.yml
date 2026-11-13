@@ -50,8 +50,8 @@ jobs:
           cache-dependency-path: host/javascript/example/package-lock.json
       - name: Build TypeScript example and API
         run: make web-build
-      - name: Test serial startup handshake
-        run: node --test host/javascript/tests/api.test.mjs
+      - name: Test JavaScript API
+        run: node --test 'host/javascript/tests/*.test.mjs'
       - name: Package website
         run: python3 scripts/package.py web
       - uses: actions/upload-artifact@v7.0.2
