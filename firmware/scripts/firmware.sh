@@ -5,10 +5,8 @@ cd "$(dirname "$0")/../.."
 project_root="$PWD"
 # Keep Sticky's UART-only configuration separate from generic builds.
 board="${ESP_CON2_BOARD:-generic}"
-variant="${ESP_CON2_PROFILE:-pro}"
 case "$board" in
-  generic) ;;
-  sticky) variant+="-sticky" ;;
+  generic|sticky) ;;
   *) echo "Unknown ESP_CON2_BOARD: $board (use generic or sticky)" >&2; exit 1 ;;
 esac
 mkdir -p build/config build/logs
@@ -42,11 +40,10 @@ for arg in "$@"; do
   [[ "$arg" == SDKCONFIG=* ]] && has_config=true
   [[ "$arg" == SDKCONFIG_DEFAULTS=* ]] && has_defaults=true
 done
-$has_build || defaults+=(-B "$project_root/build/firmware/$variant")
-$has_config || defaults+=(-D "SDKCONFIG=$project_root/build/config/sdkconfig-$variant")
+$has_build || defaults+=(-B "$project_root/build/firmware/$board")
+$has_config || defaults+=(-D "SDKCONFIG=$project_root/build/config/sdkconfig-$board")
 if ! $has_defaults; then
   sdk_defaults="sdkconfig.defaults"
-  [[ "${ESP_CON2_PROFILE:-pro}" =~ ^(unified|joycon2-dual)$ ]] && sdk_defaults+=";sdkconfig.dual"
   [[ "$board" == sticky ]] && sdk_defaults+=";sdkconfig.sticky"
   defaults+=(-D "SDKCONFIG_DEFAULTS=$sdk_defaults")
 fi

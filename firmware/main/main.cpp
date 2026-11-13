@@ -18,9 +18,10 @@
 #include "dual_joycon.hpp"
 #endif
 
-#ifndef CONFIG_BT_CTRL_BLE_MIN_CONN_INTERVAL_ENABLE
+#if !defined(CONFIG_BT_CTRL_BLE_MIN_CONN_INTERVAL_ENABLE) && !defined(CONFIG_ESP_CON2_EXPERIMENTAL_C6)
 #error "Update ESP-IDF: Switch 2 requires the official 5 ms BLE interval support."
 #endif
+// Only an explicitly selected C6 trial may bypass the timing requirement.
 
 using Report = espp::switch2::Pro2InputReport;
 using Setter = void (Report::*)(bool);

@@ -24,13 +24,10 @@ show a usable pair. Use console feedback when validating behavior.
 Install pinned dependencies using `firmware/scripts/dependencies.sh`, then:
 
 ```sh
-ESP_CON2_DUAL_PUBLIC=1 python3 firmware/scripts/prepare_dual_joycon2.py
-ESP_CON2_PROFILE=joycon2-dual bash firmware/scripts/firmware.sh \
-  -B ../build/firmware/joycon2-dual -D SDKCONFIG="$PWD/build/config/sdkconfig-joycon2-dual" \
-  -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.dual' build
+make firmware
 ```
 
-For flashing, use the same arguments with `-p PORT flash` in place of `build`.
+For flashing, run `bash firmware/scripts/firmware.sh -p PORT flash`. Then select `mode joycon` if the board is in Pro Controller mode.
 Open Switch 2 Controllers → Change Grip/Order, wait for both halves to initialize,
 then send L+R together for two seconds. Keep one serial owner: the MCP server and
 Python scripts must not open the port concurrently. Opening USB can restart the

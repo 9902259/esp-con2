@@ -18,7 +18,7 @@ test:
 	node --test host/js/api.test.mjs
 firmware:
 	python3.15 firmware/scripts/prepare_unified.py
-	ESP_CON2_PROFILE=unified bash firmware/scripts/firmware.sh build
+	bash firmware/scripts/firmware.sh build
 # Virtual diagnostics reuse the production UART transport without emulating BLE.
 virtual-test:
 	ESP_CON2_BOARD=sticky $(MAKE) firmware

@@ -1,17 +1,14 @@
 # One firmware, two controller modes
 
-The `unified` build contains both the dual Joy-Con 2 driver and an isolated Pro
+The ESP32-S3 firmware contains both the dual Joy-Con 2 driver and an isolated Pro
 Controller 2 driver. One mode is active at a time. Changing mode saves the choice
 in NVS and reboots to rebuild GATT and the Bluetooth identity cleanly.
 
 ```sh
-python3 firmware/scripts/prepare_unified.py
-ESP_CON2_PROFILE=unified bash firmware/scripts/firmware.sh \
-  -B ../build/firmware/unified -D SDKCONFIG="$PWD/build/config/sdkconfig-unified" \
-  -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.dual' build
+make firmware
 ```
 
-Use the same arguments with `-p PORT flash` in place of `build` to install.
+Run `bash firmware/scripts/firmware.sh -p PORT flash` to install.
 Default mode on a new installation is Joy-Con L+R. The current mode is identified
 by the `name=` field in `STATUS`; the `MODE` command replies `@OK` before reboot.
 

@@ -9,10 +9,10 @@ From the project root:
 ```sh
 bash firmware/scripts/dependencies.sh
 make firmware
-ESP_CON2_PROFILE=unified bash firmware/scripts/firmware.sh -p /dev/cu.usbmodemXXXX flash
+bash firmware/scripts/firmware.sh -p /dev/cu.usbmodemXXXX flash
 ```
 
-The helper uses `build/firmware/unified` and `build/config/sdkconfig-unified`.
+The helper uses `build/firmware/generic` and `build/config/sdkconfig-generic`.
 Flashing replaces the device application; keep needed backups. Firmware dependency
 setup uses current stable Python 3.15, matching the host tooling; set
 `ESP_CON2_IDF_PYTHON` if it is installed at another path. The SDK keeps its own
@@ -28,7 +28,7 @@ or `ESPBAUD` to override it when the connection supports faster transfers.
 - `main/dual_joycon.hpp`: two BLE protocol sessions and controller/GATT hooks.
 - `main/unified_controller.hpp`: active-mode routing and saved mode.
 - `scripts/`: pinned dependency installation, generated drivers, build/flash helper.
-- `sdkconfig.defaults*`, `sdkconfig.dual`, `partitions.csv`: checked-in defaults.
+- `sdkconfig.defaults*`, `sdkconfig.sticky`, `partitions.csv`: checked-in defaults.
 
 ## Modes and protocol
 
@@ -53,6 +53,33 @@ S3 binary or its private hooks without revalidating pairing and report delivery.
 
 ## Board requirements
 
+### Experimental ESP32-C6 trial
+
+The Pro profile builds and boots on an ESP32-C6FH4 (4 MB flash), accepts native
+USB serial commands, and advertises as Pro Controller. A hardware trial reported
+paired, connected, and streaming continuously for 40 seconds. Here streaming
+means an encrypted link with input subscription; console-visible input, actual
+connection interval, reconnect, and wake remain unverified. The pinned C6
+controller lacks the S3/C3 5 ms interval option; this observation does not yet
+establish full compatibility.
+The C6 target defaults explicitly enable the experimental timing bypass and
+USB-only transport. The S3 firmware retains its chip-specific Joy-Con hooks.
+
+```sh
+# Install the C6 compiler without changing the default S3 build.
+IDF_TOOLS_PATH="$PWD/.deps/idf-tools" python3.15 .deps/esp-idf/tools/idf_tools.py install riscv32-esp-elf
+bash firmware/scripts/firmware.sh \
+  -B "$PWD/build/firmware/pro-c6-trial" \
+  -D SDKCONFIG="$PWD/build/config/sdkconfig-pro-c6-trial" \
+  -D IDF_TARGET=esp32c6 build
+```
+
+Use the same arguments with `-p PORT flash` in place of `build` to flash.
+The tested board exposes USB Serial/JTAG; boards wired only to a UART bridge
+need a separate transport configuration with board-appropriate UART pins.
+
+### ESP32-S3 defaults
+
 The default image accepts commands through either port:
 
 | Connection | Board pins | Host settings |
@@ -76,7 +103,7 @@ those UART pins connect to other peripherals, choose **Native USB only** or set
 different UART TX/RX pins in **esp-con2 board compatibility**:
 
 ```sh
-ESP_CON2_PROFILE=unified bash firmware/scripts/firmware.sh menuconfig
+bash firmware/scripts/firmware.sh menuconfig
 make firmware
 ```
 
@@ -91,7 +118,7 @@ SDK auto-detection does not guarantee support for every flash chip. Check the
 board/module specification instead of inferring flash type from PSRAM capacity.
 Boards with less than 2 MB flash need a separate layout and size validation.
 
-Existing `build/config/sdkconfig-unified` files keep their saved settings. To
+Existing `build/config/sdkconfig-generic` files keep their saved settings. To
 adopt the new defaults, back up and remove that file before `make firmware`.
 
 Power, antenna switching, external RF hardware, disabled USB eFuses, and unusual
@@ -109,12 +136,12 @@ controller implementations, 2 MB layout, and internal-RAM configuration.
 
 ```sh
 ESP_CON2_BOARD=sticky make firmware
-ESP_CON2_BOARD=sticky ESP_CON2_PROFILE=unified bash firmware/scripts/firmware.sh -p PORT flash
+ESP_CON2_BOARD=sticky bash firmware/scripts/firmware.sh -p PORT flash
 ESP_CON2_BOARD=sticky python3.15 .github/package.py firmware
 ```
 
-Build/config files use `build/firmware/unified-sticky` and
-`build/config/sdkconfig-unified-sticky`; the release archive is
+Build/config files use `build/firmware/sticky` and
+`build/config/sdkconfig-sticky`; the release archive is
 `build/release/esp-con2-firmware-sticky.zip`. These are isolated from generic
 builds. The host tools use Sticky's USB serial port normally. The controller
 firmware does not update the E-Ink display or use the onboard sensors.

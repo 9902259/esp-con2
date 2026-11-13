@@ -1,4 +1,12 @@
 menu "esp-con2 board compatibility"
+    config ESP_CON2_EXPERIMENTAL_C6
+        bool "Allow experimental C6 timing trial"
+        depends on IDF_TARGET_ESP32C6
+        default n
+        help
+            Permit hardware trials without controller support for the Switch's
+            5 ms interval. Pairing may work, but sustained input may disconnect.
+
     choice ESP_CON2_SERIAL
         prompt "Command serial transport"
         default ESP_CON2_SERIAL_BOTH

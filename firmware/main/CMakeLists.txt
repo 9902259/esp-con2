@@ -1,7 +1,7 @@
 # Link both serial drivers so USB-only and UART-bridge boards share one image.
-# Only the combined profile links the isolated Pro implementation.
+# The S3 image links the isolated Pro implementation.
 set(profile_requires "")
-if("$ENV{ESP_CON2_PROFILE}" STREQUAL "unified")
+if(IDF_TARGET STREQUAL "esp32s3")
   list(APPEND profile_requires unified_pro)
 endif()
 idf_component_register(SRCS "main.cpp" INCLUDE_DIRS "."

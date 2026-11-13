@@ -208,7 +208,7 @@ def main():
         report['cases'].append({'flash_mb': flash_mb, 'attached_psram_mb': psram_mb,
                                 'octal_psram': octal, 'psram_initialized': False, 'result': 'passed'})
         print(f'PASS {name}: UART, long replies, TX stress, reset and persistent NVS', flush=True)
-    production = ROOT / 'build/firmware/unified-sticky'
+    production = ROOT / 'build/firmware/sticky'
     flash = OUT / 'production-sticky.bin'
     merge(production, flash, 2)
     vm = VirtualS3(qemu, flash, OUT / 'production-sticky.uart.log')

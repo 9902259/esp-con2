@@ -26,7 +26,7 @@ elif kind == 'firmware':
         raise SystemExit(f'Unknown firmware board: {board}')
     suffix = '-sticky' if board == 'sticky' else ''
     name = f'esp-con2-firmware{suffix}'
-    source = root / f'build/firmware/unified{suffix}'
+    source = root / 'build/firmware' / board
     files = [(source / p, p) for p in ['esp_con2.bin', 'bootloader/bootloader.bin', 'partition_table/partition-table.bin', 'flash_args', 'flasher_args.json']]
 else:
     raise SystemExit(f'Unknown package: {kind}')
