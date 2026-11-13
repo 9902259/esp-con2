@@ -45,7 +45,7 @@ on completion, errors, cancellation, or disconnection.
 ## Validation limits
 
 Single/dual profiles passed the console button tests documented in
-[verified results](../docs/verified-dual-joycon.md). The combined firmware paired
+[verified results](../docs/research/verified-dual-joycon.md). The combined firmware paired
 in Pro mode and reconnected both Joy-Con halves when switched back. Transport
 status is not proof of console-visible acceptance; sticks, motion, mouse, and
 long-term reliability remain separate validation work. Do not change the pinned
@@ -55,15 +55,9 @@ S3 binary or its private hooks without revalidating pairing and report delivery.
 
 ### Experimental ESP32-C6 trial
 
-The Pro profile builds and boots on an ESP32-C6FH4 (4 MB flash), accepts native
-USB serial commands, and advertises as Pro Controller. A hardware trial reported
-paired, connected, and streaming continuously for 40 seconds. Here streaming
-means an encrypted link with input subscription; console-visible input, actual
-connection interval, reconnect, and wake remain unverified. The pinned C6
-controller lacks the S3/C3 5 ms interval option; this observation does not yet
-establish full compatibility.
-The C6 target defaults explicitly enable the experimental timing bypass and
-USB-only transport. The S3 firmware retains its chip-specific Joy-Con hooks.
+The experimental C6 build runs the Pro Controller 2 driver over native USB.
+See the [ESP32-C6 trial](../docs/research/esp32-c6-trial.md) for the observed
+controller behavior, timing limitation, and transmit failure.
 
 ```sh
 # Install the C6 compiler without changing the default S3 build.
@@ -146,21 +140,8 @@ Build/config files use `build/firmware/sticky` and
 builds. The host tools use Sticky's USB serial port normally. The controller
 firmware does not update the E-Ink display or use the onboard sensors.
 
-On the tested Sticky, 460800 and 921600 baud produced corrupt flashing packets;
-115200 completed backup, flashing, and command tests. Opening its UART bridge
-with Python also reset the MCU despite deasserting DTR/RTS. Hosts therefore retry only
-read-only `STATUS` probes during startup. Keep a persistent MCP/API connection
-open for stable BLE sessions; opening a new connection can restart BLE pairing
-or reconnection. The Go CLI preserved the running BLE session in the tested
-serial opens.
-
-Physical checks on 2026-11-10: ESP32-S3 revision 0.2, 32 MB quad flash, 8 MB PSRAM
-(unused). Both Pro mode and dual Joy-Con mode reported paired, connected, and
-streaming after mode-change reboots. Invalid/oversized commands were rejected,
-30 consecutive status requests succeeded, and a 100 ms L+R input was accepted
-and released. The board was left in Joy-Con mode with inputs released. This
-checks UART commands and BLE transport; console-visible button behavior, the
-input lease under cable removal, and long-term reliability still need testing.
+See [Sticky serial validation](../docs/research/esp32-s3-transport.md#seeed-reterminal-sticky)
+for the physical board results and serial reconnect observations.
 
 ## Virtual ESP32-S3 checks
 
@@ -180,23 +161,8 @@ IDF_TOOLS_PATH="$PWD/.deps/idf-tools" .deps/idf-tools/python_env/idf6.1_py3.15_e
 make virtual-test
 ```
 
-Eight configurations cover 2/4/8/16 MB flash with absent, quad, or octal attached
-PSRAM. PSRAM remains disabled, matching production firmware. Each tests 20
-request/reply cycles, fragmented input, a 400-byte response, TX saturation
-recovery, software reboot, and NVS persistence across process power cycles.
-Results and UART logs are saved under `build/virtual/`; `results.json` records
-the exact matrix and emulator version. The full Sticky controller image is
-also boot-probed separately, without counting it as a BLE test. To repeat the
-virtual runs without rebuilding: `python3.15 firmware/scripts/test_virtual.py --skip-build`.
-
-For a reproducible full-image abort backtrace, install `xtensa-esp-elf-gdb` with
-the same `idf_tools.py` command, then add `--debug-production`. The 2026-11-10
-run passed all eight UART/NVS cases. The full controller image did not reach
-`@READY`: GDB stopped at the BT low-power clock assertion in
-`btdm_low_power_mode_init`, called by `esp_bt_controller_init`. This is recorded
-as an incomplete production run on an emulator without Bluetooth support,
-not a successful virtual pairing test. Backtraces are in
-`build/virtual/production-debugger.log`.
+See [ESP32-S3 transport validation](../docs/research/esp32-s3-transport.md#qemu-uart-and-nvs)
+for the test matrix and recorded results.
 
 Hardware references: [Espressif serial connections](https://docs.espressif.com/projects/esp-idf/en/release-v6.1/esp32s3/get-started/establish-serial-connection.html),
 [S3 wiring](https://docs.espressif.com/projects/esp-hardware-design-guidelines/en/latest/esp32s3/schematic-checklist.html),

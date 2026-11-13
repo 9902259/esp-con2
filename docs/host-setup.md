@@ -1,18 +1,15 @@
-# AI / MCP setup
+# AI host setup
 
-The old `config/`, `.codex/`, and `.agents/` contents are consolidated here and in
-`docs/skills/esp-con2/`; no client-specific hidden folders are required by this repo.
-Build either host, then register exactly one stdio MCP server in your AI client's
+## JavaScript host
+
+Use the [Web Serial control page](web-serial.md) when your AI can operate a local
+desktop Chromium browser. Start it with `make web`, then select the board in the
+browser's serial chooser. Wait for **Ready for input** before sending commands.
+
+## Python MCP
+
+Run `make python` to build the host. Register the stdio MCP server in your AI client's
 own configuration. Replace the absolute path and optional port as appropriate.
-
-Go:
-
-```toml
-[mcp_servers.esp_con2]
-command = "/absolute/path/to/esp-con2/build/host/go/esp-con2"
-args = ["mcp"]
-# With multiple devices: args = ["mcp", "--port", "/dev/cu.usbmodemXXXX"]
-```
 
 Python 3.15:
 
@@ -22,8 +19,8 @@ command = "/absolute/path/to/esp-con2/build/host/python/esp-con2-mcp"
 # args = ["--port", "/dev/cu.usbmodemXXXX"]
 ```
 
-Both accept `ESP_CON2_PORT` as the default port. With one USB serial device, the
-hosts can auto-detect it. Disconnect Web Serial and other serial tools first.
+The server accepts `ESP_CON2_PORT` as the default port. With one USB serial device, the
+server can auto-detect it. Disconnect Web Serial and other serial tools first.
 Restart/reconnect the MCP client after changing a path or rebuilding.
 
 Tools: `list_devices`, `controller_status`, `controller_input`, `release_controls`,
@@ -32,11 +29,9 @@ Tools: `list_devices`, `controller_status`, `controller_input`, `release_control
 axes are −1…1. Reset pairing only when intentionally forgetting the active bond.
 Mode switching currently uses the CLI; reconnect MCP after the reboot.
 
-The portable [skill](skills/esp-con2/SKILL.md) explains device ownership, readiness,
-release behavior, and feedback limits. Install that directory into your agent's
-skill directory, or supply its contents manually. For example, a Codex user may
-copy it into their user-level `~/.agents/skills/`; this project does not recreate
-`.agents/` automatically.
+The [project skill](../.agents/skills/esp-con2/SKILL.md) explains device ownership,
+readiness, release behavior, and feedback limits. Codex can discover it from the
+project. For other clients, share the skill file and its linked repository guides.
 
 Example prompt:
 

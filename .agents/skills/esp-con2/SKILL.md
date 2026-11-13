@@ -1,41 +1,55 @@
 ---
 name: esp-con2
-description: Control a Nintendo Switch 2 through the esp-con2 USB-to-BLE bridge, or build and troubleshoot its ESP32-S3 firmware and host tools.
+description: Control a Nintendo Switch 2 through an esp-con2 ESP32 bridge, or build and troubleshoot the bridge and its host tools.
 ---
 
 # esp-con2
 
-The host sends commands over USB serial to an ESP32-S3, which emulates a controller over BLE. Locate the repository from the current workspace or the MCP executable. Use the [project README](../../../README.md) for the supported board, build, and setup paths.
+## Choose a host
+
+Honor the user's chosen host. Otherwise, prefer the [JavaScript API](../../../host/javascript/api.js)
+in the agent's persistent Node.js runtime when it can reach the local ESP32 serial port
+and has a compatible adapter. Import `EspCon2` as an ES module and retain one instance
+across calls. The adapter passed to `connect(port)` must expose `open(options)`,
+`setSignals(signals)`, `close()`, and WHATWG readable and writable byte streams.
+The repository ships the API without a Node serial adapter.
+
+- **Node.js:** Call `await controller.connect(port)`, then read the startup status
+  from the line callback or use `await controller.command('STATUS')`. Send bounded
+  input with `await controller.input(['a'], [0, 0, 0, 0], 100)` for a 100 ms A press.
+  Use `stop()` to interrupt a hold, then `close()` when handing off the port.
+- **Browser:** If direct Node serial access is unavailable, use the
+  [Web Serial page](../../../docs/web-serial.md) in desktop Chromium. Run `make web`,
+  have the user select the board in the serial chooser, and wait for **Ready for input**.
+- **MCP:** If the client needs MCP, use [Python MCP setup](../../../docs/host-setup.md#python-mcp).
+  Call `list_devices` and `controller_status` before input. Use `controller_input`
+  for bounded input and `release_controls` to interrupt it.
 
 ## Control the console
 
-1. Call `list_devices` and `controller_status`. If no board appears, ask the user to attach it with a USB data cable. Use the board's USB serial port. If multiple devices appear, select the board explicitly with `--port`.
-2. Check `name=` for the active profile and require `streaming=1` before sending input. For first pairing, have the user open **Controllers → Change Grip/Order**. For paired Joy-Con 2, verify both `@SIDES` streams, wait two seconds after both are active, then send L+R together to select the pair.
-3. Send the requested input with `controller_input`. Put chords in one call and send input calls sequentially. Each call releases all controls when it finishes.
-4. After a transport error, call `release_controls` if possible and check status before retrying. Serial acceptance confirms the command reached the bridge. Use console observation or a separate capture source to verify an on-screen result.
-
-| Input | Values |
-| --- | --- |
-| Buttons | `a b x y l r zl zr minus plus lstick rstick up down left right home capture gl gr c` |
-| Sticks | `lx ly rx ry` from -1 to 1. Omitted axes are centered. Verify vertical direction on the console before automating it. |
-| Duration | `duration_ms` from 20 to 10000 ms, default 120 ms. |
-
-For example, send `{"buttons":["l","r"],"duration_ms":1000}` for a one-second L+R chord. In paired Joy-Con 2 mode, GL and GR send SL and SR respectively on both halves together.
-
-Use `release_controls` to stop input and `wake_console` only when a saved bond exists. Use `reset_pairing` only when the user requests fresh pairing or removal of the active mode's saved bond. Keep input within the requested console task.
-
-## Choose or switch the serial owner
-
-Use one serial owner at a time. Keep the same MCP session across calls because reopening USB can interrupt BLE. Release MCP, the CLI, any serial monitor, or the Web Serial page before handing the port to another client.
-
-- **MCP.** Read [host setup](../../../docs/host-setup.md) for the Go or Python executable and registration. The Go entry point is `build/host/go/esp-con2 mcp`. Reserve its stdout for MCP.
-- **Mode change.** On ESP32-S3, release MCP and run `build/host/python/esp-con2 mode joycon` or `build/host/python/esp-con2 mode pro`. The board saves the selection and reboots without reflashing. Only one mode runs at a time and each mode keeps its own bonds. Reconnect MCP and check `name=` and `streaming=1` before input.
-- **Manual browser control.** Read [Web Serial](../../../docs/web-serial.md) for `make web` and browser setup. The browser owns the same serial port while connected.
+- Keep one serial owner and reuse its connection. Reopening USB can restart the board
+  or interrupt BLE. Close the current host before opening another.
+- Check the active mode in `name=` and require `streaming=1` before input. For first
+  pairing, have the user open **Controllers → Change Grip/Order**. For paired Joy-Con 2,
+  confirm both halves are streaming, wait two seconds, then send L+R together.
+- Send chords in one call and await each input before starting another. Use 20–10000 ms
+  and axes in `[lx, ly, rx, ry]` order from −1 to 1. See the
+  [serial reference](../../../docs/serial-commands.md) for button names and status fields.
+- After a transport error, release if possible and recheck readiness before retrying.
+  Wake requires a saved bond. Reset pairing only at the user's request, since it
+  clears the active mode's bond.
+- Use the [mode guide](../../../docs/unified-firmware.md) to switch between Pro and
+  Joy-Con. The board reboots, so reconnect and recheck readiness.
+- Confirm visible effects on the console or through a separate capture source.
+  Serial replies confirm command acceptance.
 
 ## Build or troubleshoot
 
-- **Host changes.** Use the [host guide](../../../host/README.md) for CLI and MCP entry points. Run `make build`, then `make test`. Read [serial commands](../../../docs/serial-commands.md) when changing the wire protocol. Preserve the MCP client's explicit release on errors or cancellation.
-- **Firmware changes.** Use the [firmware guide](../../../firmware/README.md) and pinned dependencies in `firmware/scripts/dependencies.sh`. Run `make firmware`. On ESP32-S3, keep `CONFIG_BT_CTRL_BLE_MIN_CONN_INTERVAL_ENABLE` for sustained 5 ms input and preserve the 500 ms input lease. Flashing replaces the board application. Preserve the existing firmware if the user needs to restore it.
-- **Profile diagnosis.** Check `name=` before choosing instructions. Read [unified firmware](../../../docs/unified-firmware.md) for mode switching and [verified dual Joy-Con behavior](../../../docs/verified-dual-joycon.md) for console results and limits. Connection and encryption alone do not establish button, grip, motion, or recovery behavior.
-
-Report build results and physical console results separately. The bridge provides no video or game-state feedback.
+- For host work, use the [host guide](../../../host/README.md) and run `make build`
+  and `make test`. Preserve input release on errors and cancellation.
+- For firmware work, use the [firmware guide](../../../firmware/README.md) and run
+  `make firmware`. Preserve the pinned dependencies, S3's 5 ms BLE interval support,
+  and the 500 ms input lease. Preserve a recovery image when the user needs to restore
+  the current application before flashing.
+- For profile diagnosis, use [verified Joy-Con results](../../../docs/research/verified-dual-joycon.md)
+  to distinguish pairing and streaming from console button, motion, and recovery results.

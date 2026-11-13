@@ -1,9 +1,9 @@
 # Web Serial API and example
 
-`host/js/api.js` is a dependency-free strict-mode ES module. It does not
+`host/javascript/api.js` is a dependency-free strict-mode ES module. It does not
 manipulate the DOM, select devices automatically, upload data, or provide video.
-`host/js/example/` contains the TypeScript UI, static assets, npm dependencies,
-and build script. `host/js/` contains only the reusable API.
+`host/javascript/example/` contains the TypeScript UI, static assets, npm dependencies,
+and build script.
 
 ```sh
 make web-build
@@ -13,7 +13,7 @@ make web
 
 TypeScript emits `build/js/api.js`, declarations, and
 `build/js/example/app.js`; HTML/CSS are copied into `build/js/example/`.
-You can host `build/js/` on HTTPS with no Python/Go backend. Localhost also works.
+You can host `build/js/` on HTTPS with no backend. Localhost also works.
 Serial permissions require a supporting browser and a user gesture. Do not open
 compiled modules directly with `file://`; use the local server or HTTPS.
 
@@ -27,7 +27,7 @@ const controller = new EspCon2(line => console.log(line), () => console.log('Dis
 connectButton.addEventListener('click', async () => {
   const port = await navigator.serial.requestPort();
   await controller.connect(port);
-  console.log(await controller.command('STATUS'));
+  // connect() already probes STATUS and sends its reply to the line callback.
 });
 // After checking streaming readiness and allowing initialization:
 await controller.input(['a'], [0, 0, 0, 0], 100);
@@ -45,9 +45,11 @@ await controller.close();
 
 Axes are `[lx, ly, rx, ry]` in −1…1. Buttons use the [serial bit names](serial-commands.md).
 The constructor callbacks receive serial lines and connection closure respectively.
-`ControllerSerial` remains an alias-compatible export. The API rejects overlapping
-input cycles, closes on transport timeouts, and invalidates queued requests when
-the session changes. Firmware lease expiry handles unplugging or suspended tabs.
+`ControllerSerial` remains an alias-compatible export. The API rejects overlapping input cycles, closes on transport timeouts, and
+invalidates queued requests when the session changes. Only the startup STATUS
+probe retries automatically. During a hold, the API reuses the encoded STATE
+command and refreshes the firmware lease. Calling stop cancels any queued
+refresh and sends RELEASE. Firmware lease expiry handles unplugging or suspended tabs.
 
 Before `MODE pro` / `MODE joycon`, stop input. The board reboots: close the port and
 reconnect through the normal chooser. Close MCP/CLI/serial monitors before browser

@@ -11,16 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-24.04
-            platform: linux-amd64
-            executable: esp-con2
-          - os: macos-15
-            platform: darwin-arm64
-            executable: esp-con2
-          - os: windows-2022
-            platform: windows-amd64
-            executable: esp-con2.exe
+        os: [ubuntu-24.04, macos-15, windows-2022]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     defaults:
@@ -28,10 +19,6 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-go@v7.0.0
-        with:
-          go-version-file: host/go/go.mod
-          cache-dependency-path: host/go/go.sum
       - uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.15'
@@ -41,23 +28,6 @@ jobs:
         run: |
           python -m pip install -r host/python/requirements.txt
           python -m unittest discover -s host/python -p 'test_*.py'
-      - name: Test and build Go CLI and MCP
-        working-directory: host/go
-        run: |
-          go test -race ./...
-          go vet ./...
-          go build -trimpath -o ../../build/host/go/${{ matrix.executable }} .
-      - name: Package host
-        env:
-          PLATFORM: ${{ matrix.platform }}
-          EXECUTABLE: ${{ matrix.executable }}
-        run: |
-          python .github/package.py go
-      - uses: actions/upload-artifact@v7.0.2
-        with:
-          name: release-${{ matrix.platform }}
-          path: build/release/*.zip
-          if-no-files-found: error
       - name: Package Python source
         if: runner.os == 'Linux'
         run: python .github/package.py python
@@ -77,11 +47,11 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: host/js/example/package-lock.json
+          cache-dependency-path: host/javascript/example/package-lock.json
       - name: Build TypeScript example and API
         run: make web-build
       - name: Test serial startup handshake
-        run: node --test host/js/api.test.mjs
+        run: node --test host/javascript/api.test.mjs
       - name: Package website
         run: python3 .github/package.py web
       - uses: actions/upload-artifact@v7.0.2

@@ -11,12 +11,12 @@ native USB disabled on its microphone pins.
 
 One firmware supports Pro Controller 2 or paired left/right Joy-Con 2 emulation.
 Only one mode runs at a time. Mode changes reboot the ESP32-S3 board and preserve
-separate pairing records. See [verified behavior](docs/verified-dual-joycon.md)
+separate pairing records. See [verified behavior](docs/research/verified-dual-joycon.md)
 for console-tested controls and remaining limitations.
 
 ## Build and use
 
-Install Python, Go, Node.js/npm, and connect the flashed ESP32-S3 board by USB.
+Install Python, Node.js/npm, and connect the flashed ESP32-S3 board by USB.
 From this directory:
 
 ```sh
@@ -46,22 +46,22 @@ on HTTPS removes that local server requirement. See [Web Serial](docs/web-serial
 
 ## Let an AI control it
 
-1. Run `make go` or `make python`.
-2. Register the matching MCP executable using [host setup](docs/host-setup.md).
-3. Install or share [the AI skill](docs/skills/esp-con2/SKILL.md).
-4. Ask the AI to check status and send a bounded input, for example:
-   “Press A for 100 ms, then release.”
+Use the **JavaScript host** when the AI can control a local desktop Chromium
+browser. Run `make web`, open [the control page](http://127.0.0.1:8765/example/),
+and select the ESP32-S3 board in the browser's serial chooser. Once the page
+shows **Ready for input**, ask the AI to use its controls.
 
-The MCP tools expose device discovery, status, input, release, wake, and pairing
-reset. They provide no video or game-state feedback. Pairing reset forgets the
-active mode's saved bond; use it only when fresh pairing is intended.
+For clients that need MCP, run `make python` and register the server using the
+[host setup guide](docs/host-setup.md). The [project skill](.agents/skills/esp-con2/SKILL.md)
+covers both paths. To verify a game action, check the Switch 2 screen separately.
 
 ## Development
 
 - [Firmware guide](firmware/README.md): pinned SDK, build and flashing.
-- [Host guide](host/README.md): Python 3.15 and Go CLI/MCP, reusable JavaScript API.
+- [Host guide](host/README.md): Python 3.15 CLI/MCP, reusable JavaScript API.
 - [Serial commands](docs/serial-commands.md): wire protocol and button masks.
 - [Project folders](docs/project-layout.md): sources and generated output.
+- [Research notes](docs/research/README.md): hardware trials and validation results.
 - [TODO](TODO.md): planned work, including amiibo support.
 
 Run `make test` after `make build`; use `make firmware` to build firmware.

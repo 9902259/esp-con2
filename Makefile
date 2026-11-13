@@ -1,21 +1,14 @@
 # All generated files remain outside the source directories.
-export GOCACHE := $(CURDIR)/build/cache/go
-export GOMODCACHE := $(CURDIR)/.deps/go-mod
-export GOPATH := $(CURDIR)/.deps/go
-
-.PHONY: build python go web-build test firmware virtual-test web clean
-build: python go web-build
+.PHONY: build python web-build test firmware virtual-test web clean
+build: python web-build
 python:
 	bash host/python/build.sh
-go:
-	cd host/go && go build -trimpath -o ../../build/host/go/esp-con2 .
 web-build:
-	cd host/js/example && npm ci && npm run build
+	cd host/javascript/example && npm ci && npm run build
 
 test:
-	cd host/go && go test -race ./... && go vet ./...
 	build/venv/python/bin/python -m unittest discover -s host/python -p 'test_*.py'
-	node --test host/js/api.test.mjs
+	node --test host/javascript/api.test.mjs
 firmware:
 	python3.15 firmware/scripts/prepare_unified.py
 	bash firmware/scripts/firmware.sh build

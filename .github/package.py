@@ -8,10 +8,7 @@ root = Path(__file__).resolve().parents[1]
 kind = sys.argv[1]
 output = root / 'build/release'
 output.mkdir(parents=True, exist_ok=True)
-if kind == 'go':
-    name = f"esp-con2-{os.environ['PLATFORM']}"
-    files = [(root / 'build/host/go' / os.environ['EXECUTABLE'], os.environ['EXECUTABLE'])]
-elif kind == 'python':
+if kind == 'python':
     name = 'esp-con2-python'
     files = [(p, str(p.relative_to(root))) for p in (root / 'host/python').glob('*') if p.is_file()]
     files += [(root / p, p) for p in ['README.md', 'host/README.md', 'docs/host-setup.md', 'docs/serial-commands.md']]
@@ -51,6 +48,11 @@ with ZipFile(output / f'{name}.zip', 'w', ZIP_DEFLATED) as archive:
             'Flashing replaces the application. No device bonds or NVS images are included.\n')
         # Ship the board guide and its references alongside the flashable images.
         for guide in ['firmware/README.md', 'docs/serial-commands.md',
-                      'docs/unified-firmware.md', 'docs/verified-dual-joycon.md']:
+                      'docs/unified-firmware.md',
+                      'docs/research/verified-dual-joycon.md',
+                      'docs/research/dual-joycon-alternatives.md',
+                      'docs/research/controller-mode-validation.md',
+                      'docs/research/esp32-s3-transport.md',
+                      'docs/research/esp32-c6-trial.md']:
             archive.write(root / guide, guide)
 print(output / f'{name}.zip')
