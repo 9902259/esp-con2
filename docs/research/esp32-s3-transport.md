@@ -27,7 +27,7 @@ recovery, software reboot, and NVS persistence across process power cycles.
 Results and UART logs are saved under `build/virtual/`; `results.json` records
 the exact matrix and emulator version. The full Sticky controller image is
 also boot-probed separately, without counting it as a BLE test. To repeat the
-virtual runs without rebuilding: `python3.15 firmware/scripts/test_virtual.py --skip-build`.
+virtual runs without rebuilding: `python3.15 firmware/tests/qemu/run.py --skip-build`.
 
 For a reproducible full-image abort backtrace, install `xtensa-esp-elf-gdb` with
 the same `idf_tools.py` command, then add `--debug-production`. The 2026-11-10

@@ -2,11 +2,13 @@
 .deps/
 .venv/
 __pycache__/
-firmware/build/
+# Direct idf.py runs outside scripts/idf.sh write config and builds in-tree.
+firmware/**/build/
+firmware/**/sdkconfig
+firmware/**/sdkconfig.old
+# Outputs left by older checkouts before builds moved under build/.
 firmware/build-*/
 firmware/sdkconfig-*
-firmware/sdkconfig
-firmware/sdkconfig.old
 bin/
 .playwright-cli/
 # Generated output and local recovery images are never project source.

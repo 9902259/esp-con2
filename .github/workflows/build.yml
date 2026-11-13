@@ -27,10 +27,10 @@ jobs:
       - name: Test Python CLI and MCP
         run: |
           python -m pip install -r host/python/requirements.txt
-          python -m unittest discover -s host/python -p 'test_*.py'
+          python -m unittest discover -s host/python/tests -t host/python -p 'test_*.py'
       - name: Package Python source
         if: runner.os == 'Linux'
-        run: python .github/package.py python
+        run: python scripts/package.py python
       - uses: actions/upload-artifact@v7.0.2
         if: runner.os == 'Linux'
         with:
@@ -51,9 +51,9 @@ jobs:
       - name: Build TypeScript example and API
         run: make web-build
       - name: Test serial startup handshake
-        run: node --test host/javascript/api.test.mjs
+        run: node --test host/javascript/tests/api.test.mjs
       - name: Package website
-        run: python3 .github/package.py web
+        run: python3 scripts/package.py web
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: release-web
@@ -78,14 +78,14 @@ jobs:
       - name: Build unified ESP32-S3 firmware
         run: make firmware
       - name: Package firmware
-        run: python .github/package.py firmware
+        run: python scripts/package.py firmware
       # Sticky uses GPIO19/20 for its microphone, so ship a UART-only image too.
       - name: Build and package reTerminal Sticky firmware
         env:
           ESP_CON2_BOARD: sticky
         run: |
           make firmware
-          python .github/package.py firmware
+          python scripts/package.py firmware
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: release-firmware

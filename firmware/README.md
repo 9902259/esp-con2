@@ -9,7 +9,7 @@ From the project root:
 ```sh
 bash firmware/scripts/dependencies.sh
 make firmware
-bash firmware/scripts/firmware.sh -p /dev/cu.usbmodemXXXX flash
+bash firmware/scripts/idf.sh -p /dev/cu.usbmodemXXXX flash
 ```
 
 The helper uses `build/firmware/generic` and `build/config/sdkconfig-generic`.
@@ -27,7 +27,10 @@ or `ESPBAUD` to override it when the connection supports faster transfers.
 - `main/serial_transport.hpp`, `main/Kconfig.projbuild`: USB/UART transport and board pin options.
 - `main/dual_joycon.hpp`: two BLE protocol sessions and controller/GATT hooks.
 - `main/unified_controller.hpp`: active-mode routing and saved mode.
-- `scripts/`: pinned dependency installation, generated drivers, build/flash helper.
+- `scripts/dependencies.sh`: pinned SDK and component installation.
+- `scripts/prepare_*.py`: generated Joy-Con 2 and unified Pro drivers under `.deps/`.
+- `scripts/idf.sh`: `idf.py` wrapper for build, flash, monitor and menuconfig.
+- `tests/qemu/`: virtual UART/NVS diagnostic project and its `run.py` runner.
 - `sdkconfig.defaults*`, `sdkconfig.sticky`, `partitions.csv`: checked-in defaults.
 
 ## Modes and protocol
@@ -62,7 +65,7 @@ controller behavior, timing limitation, and transmit failure.
 ```sh
 # Install the C6 compiler without changing the default S3 build.
 IDF_TOOLS_PATH="$PWD/.deps/idf-tools" python3.15 .deps/esp-idf/tools/idf_tools.py install riscv32-esp-elf
-bash firmware/scripts/firmware.sh \
+bash firmware/scripts/idf.sh \
   -B "$PWD/build/firmware/pro-c6-trial" \
   -D SDKCONFIG="$PWD/build/config/sdkconfig-pro-c6-trial" \
   -D IDF_TARGET=esp32c6 build
@@ -97,7 +100,7 @@ those UART pins connect to other peripherals, choose **Native USB only** or set
 different UART TX/RX pins in **esp-con2 board compatibility**:
 
 ```sh
-bash firmware/scripts/firmware.sh menuconfig
+bash firmware/scripts/idf.sh menuconfig
 make firmware
 ```
 
@@ -130,8 +133,8 @@ controller implementations, 2 MB layout, and internal-RAM configuration.
 
 ```sh
 ESP_CON2_BOARD=sticky make firmware
-ESP_CON2_BOARD=sticky bash firmware/scripts/firmware.sh -p PORT flash
-ESP_CON2_BOARD=sticky python3.15 .github/package.py firmware
+ESP_CON2_BOARD=sticky bash firmware/scripts/idf.sh -p PORT flash
+ESP_CON2_BOARD=sticky python3.15 scripts/package.py firmware
 ```
 
 Build/config files use `build/firmware/sticky` and
@@ -147,7 +150,7 @@ for the physical board results and serial reconnect observations.
 
 [Espressif QEMU](https://github.com/espressif/esp-toolchain-docs/blob/main/qemu/README.md)
 emulates S3 CPU, UART, flash and PSRAM, but has no Bluetooth, native USB, or GPIO
-matrix emulation. The separate `tests/qemu` project compiles the production
+matrix emulation. The separate `tests/qemu` project, driven by `tests/qemu/run.py`, compiles the production
 `main/serial_transport.hpp` with real ESP-IDF drivers and NVS. It does not mock
 pairing, run the production command parser, or validate physical board wiring.
 Its diagnostic images are excluded from release archives.

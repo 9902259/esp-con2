@@ -107,7 +107,7 @@ address; both emulated halves share that peer but have distinct keys. This is a
 separate issue to fix before encrypted dual sessions can be considered robust,
 although it does not explain the currently absent second connection event.
 
-Follow-up independent Mac scan: `debug/scan_joycon.py` (optional dependency
+Follow-up independent Mac scan: `scripts/diagnostics/scan_joycon.py` (optional dependency
 `bleak==3.1.0`) observed both Nintendo payloads: PID suffix 0x66/right and
 0x67/left, names matching their profiles, and two distinct CoreBluetooth UUIDs.
 The left advertisement remained visible after right input streaming started.
