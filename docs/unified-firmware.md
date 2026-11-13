@@ -8,7 +8,7 @@ in NVS and reboots to rebuild GATT and the Bluetooth identity cleanly.
 make firmware
 ```
 
-Run `bash firmware/scripts/firmware.sh -p PORT flash` to install.
+Run `bash firmware/scripts/idf.sh -p PORT flash` to install.
 Default mode on a new installation is Joy-Con L+R. The current mode is identified
 by the `name=` field in `STATUS`; the `MODE` command replies `@OK` before reboot.
 

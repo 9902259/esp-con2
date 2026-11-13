@@ -6,7 +6,7 @@ import time
 import serial
 import sys
 # Share the host protocol client rather than duplicating serial parsing.
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "host/python"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "host/python"))
 from control import request
 
 
@@ -24,7 +24,7 @@ def main():
     port.rts = False
     port.port = args.port
     port.open()
-    log_path = Path(__file__).resolve().parents[1] / 'build/logs/joycon2-dual-live.log'
+    log_path = Path(__file__).resolve().parents[2] / 'build/logs/joycon2-dual-live.log'
     log_path.parent.mkdir(parents=True, exist_ok=True)
     try:
         end = time.monotonic() + args.timeout

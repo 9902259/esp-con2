@@ -84,7 +84,7 @@ class MCPTests(unittest.IsolatedAsyncioTestCase):
         from mcp import ClientSession, StdioServerParameters
         from mcp.client.stdio import stdio_client
         # Listing tools and rejecting invalid input must not touch hardware.
-        params = StdioServerParameters(command=sys.executable, args=[str(Path(__file__).with_name('mcp_server.py')), '--port', '/not/a/device'])
+        params = StdioServerParameters(command=sys.executable, args=[str(Path(__file__).resolve().parents[1] / 'mcp_server.py'), '--port', '/not/a/device'])
         async with stdio_client(params) as (read, write):
             async with ClientSession(read, write) as client:
                 await client.initialize()

@@ -27,7 +27,7 @@ Install pinned dependencies using `firmware/scripts/dependencies.sh`, then:
 make firmware
 ```
 
-For flashing, run `bash firmware/scripts/firmware.sh -p PORT flash`. Then select `mode joycon` if the board is in Pro Controller mode.
+For flashing, run `bash firmware/scripts/idf.sh -p PORT flash`. Then select `mode joycon` if the board is in Pro Controller mode.
 Open Switch 2 Controllers → Change Grip/Order, wait for both halves to initialize,
 then send L+R together for two seconds. Keep one serial owner: the MCP server and
 Python scripts must not open the port concurrently. Opening USB can restart the

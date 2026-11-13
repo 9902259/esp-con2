@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import time
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 OUT = ROOT / 'build/virtual'
 SDK_PYTHON = ROOT / '.deps/idf-tools/python_env/idf6.1_py3.15_env/bin/python'
 DIAGNOSTIC = ROOT / 'build/firmware/qemu-diagnostic'
@@ -169,7 +169,7 @@ def main():
         raise SystemExit('Install qemu-xtensa with ESP-IDF idf_tools.py first; see firmware/README.md.')
     OUT.mkdir(parents=True, exist_ok=True)
     if not args.skip_build:
-        subprocess.run(['bash', 'firmware/scripts/firmware.sh', '-C', 'tests/qemu',
+        subprocess.run(['bash', 'firmware/scripts/idf.sh', '-C', 'tests/qemu',
                         '-B', str(DIAGNOSTIC), '-D', f'SDKCONFIG={ROOT}/build/config/sdkconfig-qemu-diagnostic',
                         '-D', 'SDKCONFIG_DEFAULTS=sdkconfig.defaults', 'build'], cwd=ROOT, check=True)
     report = {'qemu': subprocess.check_output([str(qemu), '--version'], text=True).splitlines()[0],

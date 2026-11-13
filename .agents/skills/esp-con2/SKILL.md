@@ -51,5 +51,8 @@ The repository ships the API without a Node serial adapter.
   `make firmware`. Preserve the pinned dependencies, S3's 5 ms BLE interval support,
   and the 500 ms input lease. Preserve a recovery image when the user needs to restore
   the current application before flashing.
+- See [project folders](../../../docs/project-layout.md) for where sources, tests and
+  generated output live. Hardware diagnostics are in `scripts/diagnostics/`; QEMU
+  transport checks run with `make virtual-test`.
 - For profile diagnosis, use [verified Joy-Con results](../../../docs/research/verified-dual-joycon.md)
   to distinguish pairing and streaming from console button, motion, and recovery results.

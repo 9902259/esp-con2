@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {ControllerSerial} from './api.js';
+import {ControllerSerial} from '../api.js';
 
 function mockPort({booting = false, error = false, beforeReply} = {}) {
   const writes = [];
