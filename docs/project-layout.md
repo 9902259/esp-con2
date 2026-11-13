@@ -8,9 +8,9 @@ firmware/            ESP-IDF project (ESP32-S3 application)
 host/
   python/            Python 3.15 CLI, MCP server and build script
     tests/           Host-only unit and MCP tests
-  javascript/        Reusable Web Serial API module (api.js)
+  javascript/        Reusable Web Serial API: api.js entry, client.js, protocol.js
     example/         TypeScript browser example and static assets
-    tests/           Node tests for the API
+    tests/           Node tests and in-memory benchmark for the API
 scripts/
   package.py         Release archive packaging used by CI and local releases
   diagnostics/       Optional BLE/controller hardware diagnostics
